@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Group Participation Peer Evaluation</title>
+<style>
+  :root {
+    --blue: #0021A5;
+    --orange: #FA4616;
+    --light: #f5f7fa;
+    --border: #dde1e7;
+    --text: #1a1a2e;
+    --muted: #6b7280;
+    --green: #166534;
+    --green-bg: #dcfce7;
+    --red: #991b1b;
+    --red-bg: #fee2e2;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--light); color: var(--text); min-height: 100vh; }
+
+  .header { background: var(--blue); color: white; padding: 1.25rem 1.5rem; }
+  .header h1 { font-size: 1.2rem; font-weight: 600; }
+  .header p { font-size: 0.8rem; opacity: 0.8; margin-top: 2px; }
+
+  .container { max-width: 680px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+  .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.25rem; }
+  .card h2 { font-size: 1rem; font-weight: 600; color: var(--blue); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--orange); display: inline-block; }
+
+  label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--muted); margin-bottom: 0.4rem; }
+  select { width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; color: var(--text); background: white; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.75rem center; cursor: pointer; }
+  select:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,33,165,0.1); }
+
+  .field { margin-bottom: 1rem; }
+
+  .peer-section { margin-bottom: 1.5rem; }
+  .peer-name { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 0.75rem; padding: 0.5rem 0.75rem; background: var(--light); border-radius: 8px; border-left: 3px solid var(--orange); }
+  .peer-name.self { border-left-color: var(--blue); }
+
+  .criteria-row { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0; gap: 1rem; }
+  .criteria-row:last-child { border-bottom: none; }
+  .criteria-label { font-size: 0.85rem; color: var(--text); flex: 1; }
+
+  .stars { display: flex; gap: 4px; }
+  .stars input { display: none; }
+  .stars label { font-size: 1.5rem; cursor: pointer; color: #d1d5db; transition: color 0.1s; line-height: 1; margin: 0; font-weight: normal; }
+  .stars input:checked ~ label,
+  .stars label:hover,
+  .stars label:hover ~ label { color: #f59e0b; }
+  .stars { flex-direction: row-reverse; }
+  .stars label:hover,
+  .stars label:hover ~ label,
+  .stars input:checked ~ label { color: #f59e0b !important; }
+  .star-group { display: flex; flex-direction: row-reverse; gap: 4px; }
+  .star-group input[type=radio] { display: none; }
+  .star-group label { font-size: 1.4rem; cursor: pointer; color: #d1d5db; transition: color 0.15s; margin: 0; font-weight: normal; line-height: 1; }
+  .star-group:hover label { color: #f59e0b; }
+  .star-group label:hover ~ label { color: #f59e0b; }
+  .star-group input[type=radio]:checked ~ label { color: #f59e0b; }
+
+  .submit-btn { width: 100%; padding: 0.9rem; background: var(--blue); color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+  .submit-btn:hover { background: #001580; }
+  .submit-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+
+  .alert { padding: 0.9rem 1rem; border-radius: 8px; font-size: 0.9rem; margin-bottom: 1rem; }
+  .alert-success { background: var(--green-bg); color: var(--green); }
+  .alert-error { background: var(--red-bg); color: var(--red); }
+
+  .step-indicator { display: flex; gap: 8px; margin-bottom: 1.5rem; }
+  .step { flex: 1; height: 4px; border-radius: 2px; background: var(--border); transition: background 0.3s; }
+  .step.active { background: var(--blue); }
+  .step.done { background: var(--orange); }
+
+  #formSection { display: none; }
+  #successSection { display: none; }
+
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; background: #dbeafe; color: #1e40af; margin-left: 6px; }
+  .scale-hint { font-size: 0.75rem; color: var(--muted); text-align: right; min-width: 80px; }
+
+  /* Prof view */
+  #profSection { display: none; }
+  .prof-btn { background: none; border: 1px solid var(--border); color: var(--muted); font-size: 0.8rem; padding: 6px 12px; border-radius: 6px; cursor: pointer; margin-top: 1rem; }
+  .prof-btn:hover { background: var(--light); }
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  th { padding: 8px 10px; text-align: left; background: var(--blue); color: white; white-space: nowrap; }
+  td { padding: 7px 10px; border-bottom: 1px solid var(--border); }
+  tr:hover td { background: var(--light); }
+  .export-btn { background: var(--orange); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 500; margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Group Participation Peer Evaluation</h1>
+  <p>Social Media Management — University of Florida</p>
+</div>
+
+<div class="container">
+
+  <div class="step-indicator">
+    <div class="step active" id="s1"></div>
+    <div class="step" id="s2"></div>
+    <div class="step" id="s3"></div>
+  </div>
+
+  <!-- SETUP SECTION -->
+  <div id="setupSection">
+    <div class="card">
+      <h2>Your Information</h2>
+      <div class="field">
+        <label>Select your group</label>
+        <select id="groupSelect" onchange="onGroupChange()">
+          <option value="">— Choose your group —</option>
+          <option value="1">Group 1</option>
+          <option value="2">Group 2</option>
+          <option value="3">Group 3</option>
+          <option value="4">Group 4</option>
+          <option value="5">Group 5</option>
+          <option value="6">Group 6</option>
+          <option value="7">Group 7</option>
+        </select>
+      </div>
+      <div class="field" id="nameField" style="display:none">
+        <label>Your name</label>
+        <select id="nameSelect">
+          <option value="">— Choose your name —</option>
+        </select>
+      </div>
+      <div class="field" id="roundField" style="display:none">
+        <label>Evaluation round</label>
+        <select id="roundSelect">
+          <option value="">— Choose round —</option>
+          <option value="1">Round 1</option>
+          <option value="2">Round 2</option>
+          <option value="3">Round 3</option>
+        </select>
+      </div>
+      <button class="submit-btn" id="startBtn" onclick="startForm()" style="display:none">Start Evaluation →</button>
+    </div>
+  </div>
+
+  <!-- FORM SECTION -->
+  <div id="formSection">
+    <div id="alertArea"></div>
+    <div id="evaluationsContainer"></div>
+    <div class="card">
+      <button class="submit-btn" id="submitBtn" onclick="submitForm()">Submit Evaluation</button>
+    </div>
+  </div>
+
+  <!-- SUCCESS SECTION -->
+  <div id="successSection">
+    <div class="card" style="text-align:center;padding:2.5rem">
+      <div style="font-size:3rem;margin-bottom:1rem">✅</div>
+      <h2 style="display:block;border:none;color:var(--green);margin-bottom:0.5rem">Submitted!</h2>
+      <p style="color:var(--muted);font-size:0.9rem" id="successMsg"></p>
+      <button class="submit-btn" style="margin-top:1.5rem;max-width:240px" onclick="resetForm()">Submit Another Round</button>
+    </div>
+  </div>
+
+  <!-- PROF ACCESS -->
+  <div style="text-align:center;margin-top:2rem">
+    <button class="prof-btn" onclick="toggleProf()">Professor View</button>
+  </div>
+
+  <div id="profSection">
+    <div class="card" style="margin-top:1rem">
+      <div id="profLogin">
+        <h2 style="display:block;border:none;margin-bottom:1rem">Professor Access</h2>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="profPwd" placeholder="Enter professor password" style="width:100%;padding:0.6rem 0.75rem;border:1px solid var(--border);border-radius:8px;font-size:0.95rem">
+        </div>
+        <button class="submit-btn" style="max-width:160px;margin-top:0.5rem" onclick="profLogin()">Login</button>
+        <p style="font-size:0.75rem;color:var(--muted);margin-top:0.75rem">Default password: <b>prof2026</b> — change in the script settings</p>
+      </div>
+      <div id="profDashboard" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+          <h2 style="display:block;border:none">Submissions Dashboard</h2>
+          <div style="display:flex;gap:8px">
+            <select id="profGroupFilter" onchange="renderProfTable()" style="width:auto">
+              <option value="">All groups</option>
+              <option value="1">Group 1</option><option value="2">Group 2</option>
+              <option value="3">Group 3</option><option value="4">Group 4</option>
+              <option value="5">Group 5</option><option value="6">Group 6</option>
+              <option value="7">Group 7</option>
+            </select>
+            <select id="profRoundFilter" onchange="renderProfTable()" style="width:auto">
+              <option value="">All rounds</option>
+              <option value="1">Round 1</option>
+              <option value="2">Round 2</option>
+              <option value="3">Round 3</option>
+            </select>
+          </div>
+        </div>
+        <button class="export-btn" onclick="exportCSV()">Export CSV</button>
+        <div class="tbl-wrap" id="profTableWrap"></div>
+        <div style="margin-top:1.5rem">
+          <h2 style="display:block;border:none;margin-bottom:1rem">Grade Summary /25</h2>
+          <div class="tbl-wrap" id="gradeTableWrap"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const GROUPS = {
+  1: ['Matina Douzenis','Kayleigh Flory','Elizabeth Oldfield','Kaylee Whitley','Brooke Woodside'],
+  2: ['Isabella Adwar','Jack Agee','Brooke Ashley','Alyssa Lowenfish','Jaelyn Skora'],
+  3: ['Reagan Gillen','Gabriela Mallidis','Avery Michael','Gunnar Whitten'],
+  4: ['Gabriella Goris','Austin Mcclain','Mia Petrov','Brylie Wunderlich','Katherine Zervoudakis'],
+  5: ['Jasmine Barnes','Reagan Collins','Molly Diskin','Janelis Hernandez','Victoria Hurles'],
+  6: ['Kyra Cooper','Abigale Dressback','Taylor Foote','Madeline Parks','Mikaela Stefanov'],
+  7: ['Melanie Avalos','Isabella Evans','Dana Gonzalez','Lily Moscowitz','Daniela Quesada']
+};
+
+const CRITERIA = ['Active Participation','Contribution','Supports Group Process','Communication','Commitment and Effort'];
+const PROF_PASSWORD = 'prof2026';
+
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyN3j9f1ks8svC-Drn5cLcjmpQ6nokMC1_0vUmEI5-g9HtV1-XUI8fHnZ3G6urNCkMf/exec';
+
+let currentGroup = null, currentName = null, currentRound = null;
+let submissions = [];
+
+// Load saved submissions from localStorage (local backup)
+function loadSubmissions() {
+  try {
+    const saved = localStorage.getItem('peer_eval_submissions');
+    if (saved) submissions = JSON.parse(saved);
+  } catch(e) { submissions = []; }
+}
+
+function saveSubmissionsLocally() {
+  try { localStorage.setItem('peer_eval_submissions', JSON.stringify(submissions)); } catch(e) {}
+}
+
+loadSubmissions();
+
+function onGroupChange() {
+  const g = parseInt(document.getElementById('groupSelect').value);
+  const nameField = document.getElementById('nameField');
+  const roundField = document.getElementById('roundField');
+  const startBtn = document.getElementById('startBtn');
+  const nameSelect = document.getElementById('nameSelect');
+
+  if (!g) { nameField.style.display='none'; roundField.style.display='none'; startBtn.style.display='none'; return; }
+
+  nameSelect.innerHTML = '<option value="">— Choose your name —</option>';
+  GROUPS[g].forEach(n => { const o = document.createElement('option'); o.value=n; o.textContent=n; nameSelect.appendChild(o); });
+  nameField.style.display = 'block';
+  roundField.style.display = 'block';
+  startBtn.style.display = 'block';
+  document.getElementById('s1').classList.add('done');
+}
+
+function startForm() {
+  const g = parseInt(document.getElementById('groupSelect').value);
+  const name = document.getElementById('nameSelect').value;
+  const round = parseInt(document.getElementById('roundSelect').value);
+  if (!g || !name || !round) { alert('Please select your group, name, and evaluation round.'); return; }
+
+  // Check duplicate
+  const exists = submissions.find(s => s.group==g && s.submitter==name && s.round==round);
+  if (exists) {
+    if (!confirm(`You already submitted Round ${round}. Submit again? (Previous will be replaced.)`)) return;
+    submissions = submissions.filter(s => !(s.group==g && s.submitter==name && s.round==round));
+  }
+
+  currentGroup = g; currentName = name; currentRound = round;
+  buildForm();
+  document.getElementById('setupSection').style.display = 'none';
+  document.getElementById('formSection').style.display = 'block';
+  document.getElementById('s2').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function buildForm() {
+  const container = document.getElementById('evaluationsContainer');
+  container.innerHTML = '';
+  const members = GROUPS[currentGroup];
+
+  // Self first, then peers
+  const order = [currentName, ...members.filter(m => m !== currentName)];
+
+  order.forEach((person, pi) => {
+    const isSelf = person === currentName;
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `<div class="peer-name ${isSelf?'self':''}">${isSelf ? '👤 Myself — ' + person : '👥 ' + person}</div>`;
+
+    CRITERIA.forEach((crit, ci) => {
+      const row = document.createElement('div');
+      row.className = 'criteria-row';
+      const key = `r_${pi}_${ci}`;
+      row.innerHTML = `
+        <span class="criteria-label">${crit}</span>
+        <div class="star-group">
+          ${[5,4,3,2,1].map(v => `
+            <input type="radio" name="${key}" id="${key}_${v}" value="${v}">
+            <label for="${key}_${v}" title="${v} star${v>1?'s':''}">★</label>
+          `).join('')}
+        </div>
+        <span class="scale-hint">1–5</span>`;
+      card.appendChild(row);
+    });
+
+    container.appendChild(card);
+  });
+}
+
+function submitForm() {
+  const members = GROUPS[currentGroup];
+  const order = [currentName, ...members.filter(m => m !== currentName)];
+  const ratings = {};
+  let allFilled = true;
+
+  order.forEach((person, pi) => {
+    ratings[person] = {};
+    CRITERIA.forEach((crit, ci) => {
+      const key = `r_${pi}_${ci}`;
+      const checked = document.querySelector(`input[name="${key}"]:checked`);
+      if (!checked) { allFilled = false; return; }
+      ratings[person][crit] = parseInt(checked.value);
+    });
+  });
+
+  if (!allFilled) {
+    document.getElementById('alertArea').innerHTML = '<div class="alert alert-error">⚠ Please rate all criteria for everyone before submitting.</div>';
+    window.scrollTo(0,200);
+    return;
+  }
+
+  document.getElementById('alertArea').innerHTML = '';
+
+  const submission = {
+    group: currentGroup,
+    submitter: currentName,
+    round: currentRound,
+    timestamp: new Date().toISOString(),
+    ratings
+  };
+
+  // Save locally as backup
+  submissions.push(submission);
+  saveSubmissionsLocally();
+
+  // Disable button and show sending state
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  if (!GOOGLE_SCRIPT_URL) {
+    // No URL set yet — just show success (local save only)
+    showSuccess();
+    return;
+  }
+
+  // Send to Google Sheets
+  fetch(GOOGLE_SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(submission)
+  })
+  .then(() => { showSuccess(); })
+  .catch(() => {
+    // Still show success — data is saved locally
+    showSuccess();
+    console.warn('Google Sheets sync failed — data saved locally.');
+  });
+}
+
+function showSuccess() {
+  document.getElementById('formSection').style.display = 'none';
+  document.getElementById('successSection').style.display = 'block';
+  document.getElementById('successMsg').textContent = `Thank you, ${currentName}! Your Round ${currentRound} evaluation for Group ${currentGroup} has been recorded.`;
+  document.getElementById('s2').classList.add('done');
+  document.getElementById('s3').classList.add('active','done');
+  const btn = document.getElementById('submitBtn');
+  if(btn){ btn.disabled = false; btn.textContent = 'Submit Evaluation'; }
+  window.scrollTo(0,0);
+}
+
+function resetForm() {
+  document.getElementById('successSection').style.display = 'none';
+  document.getElementById('setupSection').style.display = 'block';
+  document.getElementById('groupSelect').value = '';
+  document.getElementById('nameField').style.display = 'none';
+  document.getElementById('roundField').style.display = 'none';
+  document.getElementById('startBtn').style.display = 'none';
+  ['s1','s2','s3'].forEach(id => { document.getElementById(id).className='step'; });
+  document.getElementById('s1').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function toggleProf() {
+  const s = document.getElementById('profSection');
+  s.style.display = s.style.display === 'none' ? 'block' : 'none';
+}
+
+function profLogin() {
+  const pwd = document.getElementById('profPwd').value;
+  if (pwd !== PROF_PASSWORD) { alert('Incorrect password.'); return; }
+  document.getElementById('profLogin').style.display = 'none';
+  document.getElementById('profDashboard').style.display = 'block';
+  renderProfTable();
+  renderGradeTable();
+}
+
+function renderProfTable() {
+  const gf = document.getElementById('profGroupFilter').value;
+  const rf = document.getElementById('profRoundFilter').value;
+  let filtered = submissions;
+  if (gf) filtered = filtered.filter(s => s.group == gf);
+  if (rf) filtered = filtered.filter(s => s.round == rf);
+
+  if (!filtered.length) { document.getElementById('profTableWrap').innerHTML = '<p style="color:#6b7280;font-size:0.85rem;padding:1rem 0">No submissions yet.</p>'; return; }
+
+  let html = '<table><thead><tr><th>Group</th><th>Round</th><th>Submitter</th><th>Timestamp</th>';
+  CRITERIA.forEach(c => html += `<th>${c} (Self)</th>`);
+  // peer cols for each member
+  html += '<th>Peers Rated</th></tr></thead><tbody>';
+
+  filtered.forEach(s => {
+    const selfRatings = CRITERIA.map(c => s.ratings[s.submitter]?.[c] ?? '—').join('</td><td>');
+    const peersRated = Object.keys(s.ratings).filter(p => p !== s.submitter).join(', ');
+    html += `<tr><td>Group ${s.group}</td><td>Round ${s.round}</td><td>${s.submitter}</td><td>${new Date(s.timestamp).toLocaleString()}</td><td>${selfRatings}</td><td style="font-size:0.75rem;color:#6b7280">${peersRated}</td></tr>`;
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('profTableWrap').innerHTML = html;
+  renderGradeTable();
+}
+
+function computeGrades() {
+  const results = {};
+  for (const [g, members] of Object.entries(GROUPS)) {
+    results[g] = {};
+    members.forEach(m => { results[g][m] = {selfPts:[],peerPts:[],missed:[]}; });
+
+    for (let round = 1; round <= 3; round++) {
+      const roundSubs = submissions.filter(s => s.group == g && s.round == round);
+      const submitters = new Set(roundSubs.map(s => s.submitter));
+
+      members.forEach(student => {
+        const didSubmit = submitters.has(student);
+        if (!didSubmit) {
+          results[g][student].selfPts.push(0);
+          results[g][student].peerPts.push(0);
+          results[g][student].missed.push(round);
+          // groupmates get 25 peer bonus
+          members.filter(m => m !== student).forEach(mate => {
+            // will be added when processing that mate's peer scores
+          });
+        } else {
+          const sub = roundSubs.find(s => s.submitter === student);
+          const selfRaw = CRITERIA.reduce((a,c) => a + (sub.ratings[student]?.[c] || 0), 0);
+          results[g][student].selfPts.push(Math.round((selfRaw / 25) * 25 * 100) / 100);
+        }
+      });
+
+      // peer scores
+      members.forEach(student => {
+        const didSubmit = submitters.has(student);
+        if (!didSubmit) { results[g][student].peerPts.push(0); return; }
+        const peerScores = [];
+        members.filter(m => m !== student).forEach(rater => {
+          if (submitters.has(rater)) {
+            const sub = roundSubs.find(s => s.submitter === rater);
+            const raw = CRITERIA.reduce((a,c) => a + (sub.ratings[student]?.[c] || 0), 0);
+            peerScores.push(raw);
+          } else {
+            peerScores.push(25); // absent rater gives perfect
+          }
+        });
+        const avg = peerScores.length ? peerScores.reduce((a,b)=>a+b,0)/peerScores.length : 0;
+        results[g][student].peerPts.push(Math.round((avg/25)*25*100)/100);
+      });
+    }
+  }
+  return results;
+}
+
+function renderGradeTable() {
+  const grades = computeGrades();
+  let html = '<table><thead><tr><th>Student</th><th>Group</th><th>R1 Self</th><th>R1 Peer</th><th>R1 /50</th><th>R2 Self</th><th>R2 Peer</th><th>R2 /50</th><th>R3 Self</th><th>R3 Peer</th><th>R3 /50</th><th>Total /150</th><th>Grade /25</th></tr></thead><tbody>';
+
+  for (const [g, members] of Object.entries(grades)) {
+    for (const [student, data] of Object.entries(members)) {
+      let total = 0, max = 0;
+      let cells = '';
+      for (let i = 0; i < 3; i++) {
+        const sp = data.selfPts[i] ?? null;
+        const pp = data.peerPts[i] ?? null;
+        if (sp !== null && pp !== null) {
+          const ev = sp + pp;
+          total += ev; max += 50;
+          const missed = data.missed.includes(i+1);
+          cells += `<td>${missed?'<span style="color:#991b1b">0</span>':sp.toFixed(1)}</td><td>${missed?'<span style="color:#991b1b">0</span>':pp.toFixed(1)}</td><td><b>${ev.toFixed(1)}</b></td>`;
+        } else {
+          cells += '<td>—</td><td>—</td><td>—</td>';
+        }
+      }
+      const grade25 = max === 150 ? (total/150)*25 : null;
+      const gradeDisp = grade25 !== null
+        ? `<b style="color:${grade25>=22.5?'#166534':grade25>=17.5?'#854d0e':'#991b1b'}">${grade25.toFixed(2)}</b>`
+        : (max > 0 ? `<span style="color:#6b7280">${((total/max)*25).toFixed(2)}*</span>` : '—');
+      html += `<tr><td>${student}</td><td>G${g}</td>${cells}<td>${max>0?total.toFixed(1):'—'} / ${max}</td><td>${gradeDisp}</td></tr>`;
+    }
+  }
+  html += '</tbody></table><p style="font-size:0.75rem;color:#6b7280;margin-top:0.5rem">* Partial grade — not all 3 rounds submitted yet.</p>';
+  document.getElementById('gradeTableWrap').innerHTML = html;
+}
+
+function exportCSV() {
+  const grades = computeGrades();
+  const rows = [['Student','Group','R1 Self','R1 Peer','R1 /50','R2 Self','R2 Peer','R2 /50','R3 Self','R3 Peer','R3 /50','Total /150','Grade /25','Missed Rounds']];
+  for (const [g, members] of Object.entries(grades)) {
+    for (const [student, data] of Object.entries(members)) {
+      let total=0, max=0, row=[student, 'Group '+g];
+      for (let i=0;i<3;i++) {
+        const sp=data.selfPts[i]??null, pp=data.peerPts[i]??null;
+        if (sp!==null&&pp!==null) { const ev=sp+pp; total+=ev; max+=50; row.push(sp.toFixed(1),pp.toFixed(1),ev.toFixed(1)); }
+        else row.push('','','');
+      }
+      row.push(max>0?total.toFixed(1):'', max===150?((total/150)*25).toFixed(2):'');
+      row.push(data.missed.length?data.missed.join(';'):'none');
+      rows.push(row);
+    }
+  }
+  const csv = rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'peer_eval_grades.csv';
+  a.click();
+}
+</script>
+</body>
+</html>
