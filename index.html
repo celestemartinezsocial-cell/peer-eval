@@ -75,7 +75,7 @@ tr:hover td{background:var(--light)}
 
 <div class="header">
   <h1>Group Participation Peer Evaluation</h1>
-  <p>Social Media Management — University of Florida</p>
+  <p>Social Media Management</p>
 </div>
 
 <div class="container">
@@ -562,26 +562,53 @@ function renderProfTable() {
     ['Rounds with data',[...new Set(submissions.map(s=>s.round))].length+' / 3'],
   ].map(([l,v])=>'<div style="background:var(--light);border-radius:8px;padding:0.75rem;text-align:center"><div style="font-size:1.3rem;font-weight:600">'+sanitize(v)+'</div><div style="font-size:0.75rem;color:var(--muted)">'+sanitize(l)+'</div></div>').join('');
 
-  // Submissions table
+  // Submissions table — one row per submitter, showing self + all peer ratings
   if(!filtered.length){
     document.getElementById('profTableWrap').innerHTML='<p style="color:#6b7280;font-size:0.85rem;padding:1rem 0">No submissions yet.</p>';
   } else {
+    // Build dynamic headers based on max group size
+    const maxPeers=Math.max(...filtered.map(s=>Object.keys(s.ratings).filter(p=>p!==s.submitter).length));
     let html='<table><thead><tr><th>Group</th><th>Round</th><th>Submitter</th><th>Timestamp</th>';
-    CRITERIA.forEach(c=>html+='<th>Self: '+sanitize(c)+'</th>');
-    html+='<th>Peers Rated</th></tr></thead><tbody>';
+    CRITERIA.forEach(c=>html+='<th style="background:#1a3a8f">Self:<br>'+sanitize(c)+'</th>');
+    for(let p=1;p<=maxPeers;p++){
+      html+='<th style="background:#1a5276">Peer '+p+' Name</th>';
+      CRITERIA.forEach(c=>html+='<th style="background:#1a5276">P'+p+':<br>'+sanitize(c)+'</th>');
+    }
+    html+='</tr></thead><tbody>';
+
     filtered.forEach(s=>{
-      const selfR=CRITERIA.map(c=>{
-        const td=document.createElement('td');
-        td.textContent=(s.ratings[s.submitter]&&s.ratings[s.submitter][c])?s.ratings[s.submitter][c]:'—';
-        return td.outerHTML;
-      }).join('');
       const peers=Object.keys(s.ratings).filter(p=>p!==s.submitter);
+
+      // Base cells
       const td1=document.createElement('td'); td1.textContent='Group '+s.group;
       const td2=document.createElement('td'); td2.textContent='Round '+s.round;
-      const td3=document.createElement('td'); td3.textContent=s.submitter;
-      const td4=document.createElement('td'); td4.textContent=new Date(s.timestamp).toLocaleString();
-      const td5=document.createElement('td'); td5.textContent=peers.join(', '); td5.style.fontSize='0.75rem'; td5.style.color='#6b7280';
-      html+='<tr>'+td1.outerHTML+td2.outerHTML+td3.outerHTML+td4.outerHTML+selfR+td5.outerHTML+'</tr>';
+      const td3=document.createElement('td'); td3.textContent=s.submitter; td3.style.fontWeight='500';
+      const td4=document.createElement('td'); td4.textContent=new Date(s.timestamp).toLocaleString(); td4.style.fontSize='0.75rem';
+      let row=td1.outerHTML+td2.outerHTML+td3.outerHTML+td4.outerHTML;
+
+      // Self ratings
+      CRITERIA.forEach(c=>{
+        const td=document.createElement('td');
+        td.textContent=(s.ratings[s.submitter]&&s.ratings[s.submitter][c])?s.ratings[s.submitter][c]:'—';
+        td.style.background='#eef2ff';
+        row+=td.outerHTML;
+      });
+
+      // Peer ratings
+      for(let p=0;p<maxPeers;p++){
+        const peer=peers[p]||null;
+        const tdName=document.createElement('td');
+        tdName.textContent=peer||'';
+        tdName.style.fontWeight='500'; tdName.style.fontSize='0.78rem'; tdName.style.background='#e8f4f8';
+        row+=tdName.outerHTML;
+        CRITERIA.forEach(c=>{
+          const td=document.createElement('td');
+          td.textContent=(peer&&s.ratings[peer]&&s.ratings[peer][c])?s.ratings[peer][c]:'—';
+          td.style.background='#e8f4f8';
+          row+=td.outerHTML;
+        });
+      }
+      html+='<tr>'+row+'</tr>';
     });
     html+='</tbody></table>';
     document.getElementById('profTableWrap').innerHTML=html;
@@ -593,7 +620,7 @@ function renderProfTable() {
 function renderGradeTable() {
   const grades=computeGrades();
   let html='<table><thead><tr><th>Student</th><th>Group</th>';
-  for(let r=1;r<=3;r++) html+='<th>R'+r+' Self</th><th>R'+r+' Peer</th><th>R'+r+' /'+  '?</th>';
+  for(let r=1;r<=3;r++) html+='<th>R'+r+' Self /25</th><th>R'+r+' Peer</th><th>R'+r+' Total</th>';
   html+='<th>Total</th><th>Grade /100</th><th>Missed</th></tr></thead><tbody>';
 
   for(const [g,members] of Object.entries(grades)){
